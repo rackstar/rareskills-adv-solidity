@@ -10,7 +10,10 @@ contract TokenSanctions is ERC20, Ownable2Step {
 
     mapping(address user => bool) sanctionedUsers;
 
-    constructor(uint256 initialSupply) ERC20("TokenSanction", "TKS") Ownable(msg.sender) {
+    constructor(uint256 initialSupply, string memory name, string memory symbol)
+        ERC20(name, symbol)
+        Ownable(msg.sender)
+    {
         _mint(msg.sender, initialSupply);
     }
 
@@ -18,10 +21,7 @@ contract TokenSanctions is ERC20, Ownable2Step {
         sanctionedUsers[user] = true;
     }
 
-    function transfer(
-        address to,
-        uint256 value
-    ) public override returns (bool) {
+    function transfer(address to, uint256 value) public override returns (bool) {
         if (sanctionedUsers[_msgSender()] || sanctionedUsers[to]) {
             revert UserBanned();
         }
@@ -30,10 +30,7 @@ contract TokenSanctions is ERC20, Ownable2Step {
         return true;
     }
 
-    function approve(
-        address spender,
-        uint256 value
-    ) public override returns (bool) {
+    function approve(address spender, uint256 value) public override returns (bool) {
         if (sanctionedUsers[_msgSender()] || sanctionedUsers[spender]) {
             revert UserBanned();
         }
@@ -42,11 +39,7 @@ contract TokenSanctions is ERC20, Ownable2Step {
         return true;
     }
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 value
-    ) public override returns (bool) {
+    function transferFrom(address from, address to, uint256 value) public override returns (bool) {
         if (sanctionedUsers[from] || sanctionedUsers[to]) {
             revert UserBanned();
         }

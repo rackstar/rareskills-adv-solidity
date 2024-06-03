@@ -6,8 +6,10 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 contract TokenGodMode is ERC20, Ownable2Step {
-
-    constructor(uint256 initialSupply) ERC20("TokenSanction", "TKS") Ownable(msg.sender) {
+    constructor(uint256 initialSupply, string memory name, string memory symbol)
+        ERC20(name, symbol)
+        Ownable(msg.sender)
+    {
         _mint(msg.sender, initialSupply);
     }
 

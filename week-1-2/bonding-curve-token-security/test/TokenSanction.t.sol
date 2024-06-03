@@ -15,7 +15,7 @@ contract TokenSanctionsTest is Test {
 
     function setUp() public {
         vm.startPrank(owner);
-        token = new TokenSanctions(1000 * ONE_ETH);
+        token = new TokenSanctions(1000 * ONE_ETH, "TokenSanctions", "TKS");
         token.transfer(user, 100 * ONE_ETH);
         token.transfer(bannedUser, 50 * ONE_ETH);
         vm.stopPrank();

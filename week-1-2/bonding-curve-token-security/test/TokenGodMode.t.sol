@@ -15,7 +15,7 @@ contract TokenGodModeTest is Test {
 
     function setUp() public {
         vm.startPrank(owner);
-        token = new TokenGodMode(1000 * ONE_ETH);
+        token = new TokenGodMode(1000 * ONE_ETH, "TokenGodMode", "TGM");
         token.transfer(user, 100 * ONE_ETH);
         vm.stopPrank();
     }
