@@ -130,5 +130,3 @@ contract TokenBC is ERC20, Ownable2Step {
         return quantity;
     }
 }
-
-
