@@ -4,7 +4,7 @@ pragma solidity 0.8.25;
 import "forge-std/Test.sol";
 import {ERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {UntrustedEscrow} from "../src/UntrustedEscrow.sol"; // Assuming the contract is in the parent directory
+import {UntrustedEscrow} from "../src/UntrustedEscrow.sol";
 
 contract UntrustedEscrowTest is Test {
     UntrustedEscrow escrow;
@@ -33,7 +33,9 @@ contract UntrustedEscrowTest is Test {
         escrow.deposit(address(token), seller, amount);
         vm.stopPrank();
 
-        assertEq(escrow.deposits(buyer, seller, address(token)), amount, "Deposit amount mismatch");
+        // Access the depositValue field in the Deposit struct
+        (uint256 depositValue,,) = escrow.deposits(buyer, seller, address(token));
+        assertEq(depositValue, amount, "Deposit amount mismatch");
     }
 
     function testApproveWithdraw() public {
@@ -47,7 +49,8 @@ contract UntrustedEscrowTest is Test {
         escrow.approveWithdraw(address(token), seller);
         vm.stopPrank();
 
-        bool approved = escrow.approvals(buyer, seller, address(token));
+        // Access the approved field in the Deposit struct
+        (, bool approved,) = escrow.deposits(buyer, seller, address(token));
         assertTrue(approved, "Approval status mismatch");
     }
 
