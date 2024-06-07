@@ -5,7 +5,6 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import "forge-std/console.sol";
 
 /// @title TokenBC - A simple ERC20 token with a linear bonding curve for minting and burning tokens
 /// @dev A cooldown period is enforce between buy and sell to prevent sandwich attacks
@@ -38,7 +37,6 @@ contract TokenBC is ERC20, Ownable2Step {
         if (msg.value == 0) revert InsufficientPayment();
 
         uint256 tokensToMint = calculateTokensToMint({_ethToSell: msg.value});
-        console.log("tokensToMint: ", tokensToMint);
         if (tokensToMint < _minAmountOut) revert MinAmountOutNotMet(tokensToMint, _minAmountOut);
         _mint(msg.sender, tokensToMint);
 
@@ -58,8 +56,6 @@ contract TokenBC is ERC20, Ownable2Step {
 
         // protect against sandwich attacks by enforcing a cooldown period between buy and sell
         uint256 coolDownExpiry = lastBuyTimestamp[msg.sender] + COOLDOWN_PERIOD;
-        console.log("coolDownExpiry: ", coolDownExpiry);
-        console.log("block.timestamp: ", block.timestamp);
         if (block.timestamp < coolDownExpiry) {
             revert CooldownNotElapsed(coolDownExpiry);
         }
@@ -91,13 +87,6 @@ contract TokenBC is ERC20, Ownable2Step {
         uint256 currentSupplySquared = currentSupply ** 2;
         uint256 newSupplySquared = newSupply ** 2;
 
-        console.log("-------calculateEthOut--------");
-        console.log("currentSupply:", currentSupply);
-        console.log("newSupply:", newSupply);
-        console.log("currentSupplySquared:", currentSupplySquared);
-        console.log("newSupplySquared:", newSupplySquared);
-        console.log("------------------------------");
-
         // round up price for user by adding 1
         return (currentSupplySquared - newSupplySquared + 1) / 2;
     }
@@ -112,12 +101,7 @@ contract TokenBC is ERC20, Ownable2Step {
     function calculateTokensToMint(uint256 _ethToSell) public view returns (uint256) {
         uint256 currentSupply = totalSupply();
         // rounds down in favour of contract
-        uint256 newSupply = Math.sqrt(_ethToSell * 2 + currentSupply * currentSupply);
-
-        console.log("-------calculateTokensToMint-------");
-        console.log("currentSupply:", currentSupply);
-        console.log("newSupply:", newSupply);
-        console.log("-----------------------------------");
+        uint256 newSupply = Math.sqrt(_ethToSell * 2 + currentSupply ** 2);
 
         // tokenToMint is the Q delta
         return newSupply - currentSupply;
