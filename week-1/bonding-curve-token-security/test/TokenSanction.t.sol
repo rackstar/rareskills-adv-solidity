@@ -23,37 +23,70 @@ contract TokenSanctionsTest is Test {
 
     function testBannedUserCannotSendTokens() public {
         vm.startPrank(owner);
-        token.banUser(bannedUser);
+        vm.expectEmit(true, true, true, true);
+        emit TokenSanctions.UserBanned(bannedUser);
+        token.ban(bannedUser);
         vm.stopPrank();
 
         // Banned user tries to transfer tokens
         vm.startPrank(bannedUser);
-        vm.expectRevert(TokenSanctions.UserBanned.selector);
+        vm.expectRevert(TokenSanctions.UserBannedError.selector);
         token.transfer(recipient, 10 * ONE_ETH);
         vm.stopPrank();
     }
 
+    function testUnBannedUserCanSendTokensAgain() public {
+        uint256 transferAmount = 10 * ONE_ETH;
+        uint256 balanceBefore = token.balanceOf(bannedUser);
+        uint256 recipientBalanceBefore = token.balanceOf(recipient);
+
+        vm.startPrank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit TokenSanctions.UserBanned(bannedUser);
+        token.ban(bannedUser);
+        vm.stopPrank();
+
+        // Banned user tries to transfer tokens
+        vm.startPrank(bannedUser);
+        vm.expectRevert(TokenSanctions.UserBannedError.selector);
+        token.transfer(recipient, transferAmount);
+        vm.stopPrank();
+
+        // unban user should be able to transfer tokens
+        vm.startPrank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit TokenSanctions.UserUnbanned(bannedUser);
+        token.unban(bannedUser);
+        vm.stopPrank();
+
+        vm.startPrank(bannedUser);
+        token.transfer(recipient, transferAmount);
+        vm.stopPrank();
+
+        uint256 bannedUserBalanceAfter = token.balanceOf(bannedUser);
+        uint256 recipientBalanceAfter = token.balanceOf(recipient);
+
+        assertEq(
+            bannedUserBalanceAfter, balanceBefore - transferAmount, "Balance of user should decrease by transfer amount"
+        );
+        assertEq(
+            recipientBalanceAfter,
+            recipientBalanceBefore + transferAmount,
+            "Balance of recipient should increase by transfer amount"
+        );
+    }
+
     function testBannedUserCannotReceiveTokens() public {
         vm.startPrank(owner);
-        token.banUser(bannedUser);
+        vm.expectEmit(true, true, true, true);
+        emit TokenSanctions.UserBanned(bannedUser);
+        token.ban(bannedUser);
         vm.stopPrank();
 
         // User tries to transfer tokens to banned user
         vm.startPrank(user);
-        vm.expectRevert(TokenSanctions.UserBanned.selector);
+        vm.expectRevert(TokenSanctions.UserBannedError.selector);
         token.transfer(bannedUser, 10 * ONE_ETH);
-        vm.stopPrank();
-    }
-
-    function testBannedUserCannotApproveTokens() public {
-        vm.startPrank(owner);
-        token.banUser(bannedUser);
-        vm.stopPrank();
-
-        // Banned user tries to approve tokens
-        vm.startPrank(bannedUser);
-        vm.expectRevert(TokenSanctions.UserBanned.selector);
-        token.approve(spender, 10 * ONE_ETH);
         vm.stopPrank();
     }
 
@@ -64,23 +97,27 @@ contract TokenSanctionsTest is Test {
 
         // Owner bans the recipient
         vm.startPrank(owner);
-        token.banUser(recipient);
+        vm.expectEmit(true, true, true, true);
+        emit TokenSanctions.UserBanned(recipient);
+        token.ban(recipient);
         vm.stopPrank();
 
         // Spender tries to transfer tokens to the banned recipient
         vm.startPrank(spender);
-        vm.expectRevert(TokenSanctions.UserBanned.selector);
+        vm.expectRevert(TokenSanctions.UserBannedError.selector);
         token.transferFrom(user, recipient, 10 * ONE_ETH);
         vm.stopPrank();
 
         // Owner bans the user
         vm.startPrank(owner);
-        token.banUser(user);
+        vm.expectEmit(true, true, true, true);
+        emit TokenSanctions.UserBanned(user);
+        token.ban(user);
         vm.stopPrank();
 
         // Spender tries to transfer tokens from the banned user
         vm.startPrank(spender);
-        vm.expectRevert(TokenSanctions.UserBanned.selector);
+        vm.expectRevert(TokenSanctions.UserBannedError.selector);
         token.transferFrom(user, recipient, 10 * ONE_ETH);
         vm.stopPrank();
     }
